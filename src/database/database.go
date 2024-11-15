@@ -85,5 +85,10 @@ func InitDatabase() (Forum_db, error) {
 // creates/updates the tables according the structs
 func (self *Forum_db) autoMigration() error {
 	// automigrate won't delete old columns
-	return self.db.AutoMigrate()
+	return self.db.AutoMigrate(
+		&GroupMembers{},
+		&Groups{},
+		&Posts{},
+		&Users{},
+	)
 }
