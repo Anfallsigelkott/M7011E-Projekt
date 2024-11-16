@@ -92,3 +92,68 @@ func (self *Forum_db) autoMigration() error {
 		&Users{},
 	)
 }
+
+// ------------------------- DATABASE FUNCTIONS ------------------------- //
+
+// ------------- Entry creators ------------- //
+
+func (self *Forum_db) createNewUser(uName string, pw string) error {
+	tmp := Users{
+		userName: uName,
+		password: pw,
+	}
+	err := self.db.Create(&tmp).Error
+	return err
+}
+
+func (self *Forum_db) createNewGroup(gName string) error {
+	tmp := Groups{
+		groupName: gName,
+	}
+	err := self.db.Create(&tmp).Error
+	return err
+}
+
+func (self *Forum_db) addUserToGroup(user int, group int, role int) error {
+	tmp := GroupMembers{
+		userID:  user,
+		groupID: group,
+		roleID:  role,
+	}
+	err := self.db.Create(&tmp).Error
+	return err
+}
+
+func (self *Forum_db) createPostEntry(poster int, postContent string, reply int) error {
+	tmp := Posts{
+		posterID: poster,
+		content:  postContent,
+		replyID:  reply,
+	}
+	err := self.db.Create(&tmp).Error
+	return err
+}
+
+// ------------- Entry updaters ------------- //
+
+func (self *Forum_db) updateUserRole(user int, group int, newRole int) error {
+	err := self.db.Where(&GroupMembers{userID: user, groupID: group}).Update("roleID", newRole).Error
+	return err
+}
+
+func (self *Forum_db) updatePostContent(post int, newContent string) error {
+	err := self.db.Where(&Posts{postID: post}).Update("content", newContent).Error
+	return err
+}
+
+func (self *Forum_db) updateUsername(user int, newUsername string) error {
+	err := self.db.Where(&Users{userID: user}).Update("userName", newUsername).Error
+	return err
+}
+
+// ------------- Entry removers ------------- //
+
+func (self *Forum_db) removeUserFromGroup(user int, group int) error {
+	err := self.db.Delete(&GroupMembers{userID: user, groupID: group}).Error
+	return err
+}
