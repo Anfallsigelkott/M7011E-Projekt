@@ -159,22 +159,68 @@ func (self *Forum_db) removeUserFromGroup(user int, group int) error {
 }
 
 func (self *Forum_db) removeGroup(group int) error {
-	err := self.db.Delete(&Groups{groupID: group}).Error
+	tx := self.db.Begin()
+	err := tx.Delete(&Groups{groupID: group}).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	err = tx.Delete(&GroupMembers{groupID: group}).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	err = tx.Delete(&Posts{postedGroupID: group}).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	err = tx.Commit().Error
 	return err
-} // Deletes the group itself
-
-func (grp *Groups) BeforeDelete(forum *Forum_db) error {
-	err := forum.db.Delete(&GroupMembers{groupID: grp.groupID}).Error
-	if err != nil {
-		fmt.Print("groupMembers delete err: %s", err)
-		return err
-	}
-	err = forum.db.Delete(&Posts{postedGroupID: grp.groupID}).Error
-	if err != nil {
-		fmt.Print("posts delete err: %s", err)
-		return err
-	}
-	return nil
-} // Deletes associated groupMembers entries for the now-obsolete groups and posts associated with it
+} // Deletes the group itself and the associated entires in groupMembers and posts
 
 // ------------- Entry getters ------------- //
+
+func (self *Forum_db) getGroups() ([]Groups, error) {
+	var res []Groups
+	err := self.db.Find(&res).Error
+	return res, err
+}
+
+func (self *Forum_db) getJoinedGroups(user int) ([]Groups, error) {
+	var res []Groups
+	var tmp []int
+	// Find all group-member pairs for this user
+	err := self.db.Select("groupID").Where(GroupMembers{userID: user}).Find(&tmp).Error
+	if err != nil {
+		return nil, err
+	}
+	// Find and return those groups
+	err = self.db.Find(&res, tmp).Error
+	return res, err
+}
+
+func (self *Forum_db) getUsersInGroup(group int) ([]Users, error) {
+	var res []Users
+	var tmp []int
+	// Find all member-group pairs for this group
+	err := self.db.Select("userID").Where(GroupMembers{groupID: group}).Find(&tmp).Error
+	if err != nil {
+		return nil, err
+	}
+	// Find and return those users
+	err = self.db.Find(&res, tmp).Error
+	return res, err
+}
+
+func (self *Forum_db) getPostsInGroup(group int) ([]Posts, error) {
+	var res []Posts
+	err := self.db.Find(&res, Posts{postedGroupID: group}).Error
+	return res, err
+}
+
+func (self *Forum_db) getRoleInGroup(group int, user int) (int, error) {
+	var res int
+	err := self.db.Select("roleID").Where(GroupMembers{groupID: group, userID: user}).Find(&res).Error
+	return res, err
+}
