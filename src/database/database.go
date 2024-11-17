@@ -144,7 +144,7 @@ func (self *Forum_db) updateUserRole(user int, group int, newRole int) error {
 func (self *Forum_db) updatePostContent(post int, newContent string) error {
 	err := self.db.Where(&Posts{postID: post}).Update("content", newContent).Error
 	return err
-}
+} // This also serves to remove posts since a post being 'removed' is equivalent to the content being removed (to maintain reply logic)
 
 func (self *Forum_db) updateUsername(user int, newUsername string) error {
 	err := self.db.Where(&Users{userID: user}).Update("userName", newUsername).Error
@@ -157,3 +157,24 @@ func (self *Forum_db) removeUserFromGroup(user int, group int) error {
 	err := self.db.Delete(&GroupMembers{userID: user, groupID: group}).Error
 	return err
 }
+
+func (self *Forum_db) removeGroup(group int) error {
+	err := self.db.Delete(&Groups{groupID: group}).Error
+	return err
+} // Deletes the group itself
+
+func (grp *Groups) BeforeDelete(forum *Forum_db) error {
+	err := forum.db.Delete(&GroupMembers{groupID: grp.groupID}).Error
+	if err != nil {
+		fmt.Print("groupMembers delete err: %s", err)
+		return err
+	}
+	err = forum.db.Delete(&Posts{postedGroupID: grp.groupID}).Error
+	if err != nil {
+		fmt.Print("posts delete err: %s", err)
+		return err
+	}
+	return nil
+} // Deletes associated groupMembers entries for the now-obsolete groups and posts associated with it
+
+// ------------- Entry getters ------------- //
