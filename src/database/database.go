@@ -187,6 +187,12 @@ func (self *Forum_db) getGroups() ([]Groups, error) {
 	return res, err
 }
 
+func (self *Forum_db) getUserByID(user int) (Users, error) {
+	var res Users
+	err := self.db.Find(&res, user).Error
+	return res, err
+}
+
 func (self *Forum_db) getJoinedGroups(user int) ([]Groups, error) {
 	var res []Groups
 	var tmp []int
