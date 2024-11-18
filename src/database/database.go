@@ -97,16 +97,16 @@ func (self *Forum_db) autoMigration() error {
 
 // ------------- Entry creators ------------- //
 
-func (self *Forum_db) createNewUser(uName string, pw string) error {
+func (self *Forum_db) CreateNewUser(uName string, pw string) error {
 	tmp := Users{
-		userName: uName,
-		password: pw,
+		UserName: uName,
+		Password: pw,
 	}
 	err := self.db.Create(&tmp).Error
 	return err
 }
 
-func (self *Forum_db) createNewGroup(gName string) error {
+func (self *Forum_db) CreateNewGroup(gName string) error {
 	tmp := Groups{
 		groupName: gName,
 	}
@@ -114,7 +114,7 @@ func (self *Forum_db) createNewGroup(gName string) error {
 	return err
 }
 
-func (self *Forum_db) addUserToGroup(user int, group int, role int) error {
+func (self *Forum_db) AddUserToGroup(user int, group int, role int) error {
 	tmp := GroupMembers{
 		userID:  user,
 		groupID: group,
@@ -124,7 +124,7 @@ func (self *Forum_db) addUserToGroup(user int, group int, role int) error {
 	return err
 }
 
-func (self *Forum_db) createPostEntry(poster int, postContent string, reply int) error {
+func (self *Forum_db) CreatePostEntry(poster int, postContent string, reply int) error {
 	tmp := Posts{
 		posterID: poster,
 		content:  postContent,
@@ -136,29 +136,29 @@ func (self *Forum_db) createPostEntry(poster int, postContent string, reply int)
 
 // ------------- Entry updaters ------------- //
 
-func (self *Forum_db) updateUserRole(user int, group int, newRole int) error {
+func (self *Forum_db) UpdateUserRole(user int, group int, newRole int) error {
 	err := self.db.Where(&GroupMembers{userID: user, groupID: group}).Update("roleID", newRole).Error
 	return err
 }
 
-func (self *Forum_db) updatePostContent(post int, newContent string) error {
+func (self *Forum_db) UpdatePostContent(post int, newContent string) error {
 	err := self.db.Where(&Posts{postID: post}).Update("content", newContent).Error
 	return err
 } // This also serves to remove posts since a post being 'removed' is equivalent to the content being removed (to maintain reply logic)
 
-func (self *Forum_db) updateUsername(user int, newUsername string) error {
-	err := self.db.Where(&Users{userID: user}).Update("userName", newUsername).Error
+func (self *Forum_db) UpdateUsername(user int, newUsername string) error {
+	err := self.db.Where(&Users{UserID: user}).Update("userName", newUsername).Error
 	return err
 }
 
 // ------------- Entry removers ------------- //
 
-func (self *Forum_db) removeUserFromGroup(user int, group int) error {
+func (self *Forum_db) RemoveUserFromGroup(user int, group int) error {
 	err := self.db.Delete(&GroupMembers{userID: user, groupID: group}).Error
 	return err
 }
 
-func (self *Forum_db) removeGroup(group int) error {
+func (self *Forum_db) RemoveGroup(group int) error {
 	tx := self.db.Begin()
 	err := tx.Delete(&Groups{groupID: group}).Error
 	if err != nil {
@@ -181,19 +181,25 @@ func (self *Forum_db) removeGroup(group int) error {
 
 // ------------- Entry getters ------------- //
 
-func (self *Forum_db) getGroups() ([]Groups, error) {
+func (self *Forum_db) GetGroups() ([]Groups, error) {
 	var res []Groups
 	err := self.db.Find(&res).Error
 	return res, err
 }
 
-func (self *Forum_db) getUserByID(user int) (Users, error) {
+func (self *Forum_db) GetUserByID(user int) (Users, error) {
 	var res Users
 	err := self.db.Find(&res, user).Error
 	return res, err
 }
 
-func (self *Forum_db) getJoinedGroups(user int) ([]Groups, error) {
+func (self *Forum_db) GetUserByUsername(user string) (Users, error) {
+	var res Users
+	err := self.db.Where(Users{UserName: user}).Find(&res).Error
+	return res, err
+}
+
+func (self *Forum_db) GetJoinedGroups(user int) ([]Groups, error) {
 	var res []Groups
 	var tmp []int
 	// Find all group-member pairs for this user
@@ -206,7 +212,7 @@ func (self *Forum_db) getJoinedGroups(user int) ([]Groups, error) {
 	return res, err
 }
 
-func (self *Forum_db) getUsersInGroup(group int) ([]Users, error) {
+func (self *Forum_db) GetUsersInGroup(group int) ([]Users, error) {
 	var res []Users
 	var tmp []int
 	// Find all member-group pairs for this group
@@ -219,13 +225,13 @@ func (self *Forum_db) getUsersInGroup(group int) ([]Users, error) {
 	return res, err
 }
 
-func (self *Forum_db) getPostsInGroup(group int) ([]Posts, error) {
+func (self *Forum_db) GetPostsInGroup(group int) ([]Posts, error) {
 	var res []Posts
 	err := self.db.Find(&res, Posts{postedGroupID: group}).Error
 	return res, err
 }
 
-func (self *Forum_db) getRoleInGroup(group int, user int) (int, error) {
+func (self *Forum_db) GetRoleInGroup(group int, user int) (int, error) {
 	var res int
 	err := self.db.Select("roleID").Where(GroupMembers{groupID: group, userID: user}).Find(&res).Error
 	return res, err
