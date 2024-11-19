@@ -114,21 +114,22 @@ func (self *Forum_db) CreateNewGroup(gName string) error {
 	return err
 }
 
-func (self *Forum_db) AddUserToGroup(user int, group int, role int) error {
+func (self *Forum_db) AddUserToGroup(user string, group int, role int) error {
 	tmp := GroupMembers{
-		userID:  user,
-		groupID: group,
-		roleID:  role,
+		userName: user,
+		groupID:  group,
+		roleID:   role,
 	}
 	err := self.db.Create(&tmp).Error
 	return err
 }
 
-func (self *Forum_db) CreatePostEntry(poster int, postContent string, reply int) error {
+func (self *Forum_db) CreatePostEntry(poster string, group int, postContent string, reply int) error {
 	tmp := Posts{
-		posterID: poster,
-		content:  postContent,
-		replyID:  reply,
+		posterName:    poster,
+		postedGroupID: group,
+		content:       postContent,
+		replyID:       reply,
 	}
 	err := self.db.Create(&tmp).Error
 	return err
@@ -136,8 +137,8 @@ func (self *Forum_db) CreatePostEntry(poster int, postContent string, reply int)
 
 // ------------- Entry updaters ------------- //
 
-func (self *Forum_db) UpdateUserRole(user int, group int, newRole int) error {
-	err := self.db.Where(&GroupMembers{userID: user, groupID: group}).Update("roleID", newRole).Error
+func (self *Forum_db) UpdateUserRole(user string, group int, newRole int) error {
+	err := self.db.Where(&GroupMembers{userName: user, groupID: group}).Update("roleID", newRole).Error
 	return err
 }
 
@@ -146,15 +147,15 @@ func (self *Forum_db) UpdatePostContent(post int, newContent string) error {
 	return err
 } // This also serves to remove posts since a post being 'removed' is equivalent to the content being removed (to maintain reply logic)
 
-func (self *Forum_db) UpdateUsername(user int, newUsername string) error {
-	err := self.db.Where(&Users{UserID: user}).Update("userName", newUsername).Error
+func (self *Forum_db) UpdateUsername(oldUsername string, newUsername string) error {
+	err := self.db.Where(&Users{UserName: oldUsername}).Update("userName", newUsername).Error
 	return err
 }
 
 // ------------- Entry removers ------------- //
 
-func (self *Forum_db) RemoveUserFromGroup(user int, group int) error {
-	err := self.db.Delete(&GroupMembers{userID: user, groupID: group}).Error
+func (self *Forum_db) RemoveUserFromGroup(user string, group int) error {
+	err := self.db.Delete(&GroupMembers{userName: user, groupID: group}).Error
 	return err
 }
 
@@ -187,11 +188,11 @@ func (self *Forum_db) GetGroups() ([]Groups, error) {
 	return res, err
 }
 
-func (self *Forum_db) GetUserByID(user int) (Users, error) {
-	var res Users
-	err := self.db.Find(&res, user).Error
-	return res, err
-}
+//func (self *Forum_db) GetUserByID(user int) (Users, error) {
+//	var res Users
+//	err := self.db.Find(&res, user).Error
+//	return res, err
+//}
 
 func (self *Forum_db) GetUserByUsername(user string) (Users, error) {
 	var res Users
@@ -199,11 +200,11 @@ func (self *Forum_db) GetUserByUsername(user string) (Users, error) {
 	return res, err
 }
 
-func (self *Forum_db) GetJoinedGroups(user int) ([]Groups, error) {
+func (self *Forum_db) GetJoinedGroups(user string) ([]Groups, error) {
 	var res []Groups
 	var tmp []int
 	// Find all group-member pairs for this user
-	err := self.db.Select("groupID").Where(GroupMembers{userID: user}).Find(&tmp).Error
+	err := self.db.Select("groupID").Where(GroupMembers{userName: user}).Find(&tmp).Error
 	if err != nil {
 		return nil, err
 	}
@@ -231,8 +232,14 @@ func (self *Forum_db) GetPostsInGroup(group int) ([]Posts, error) {
 	return res, err
 }
 
-func (self *Forum_db) GetRoleInGroup(group int, user int) (int, error) {
+func (self *Forum_db) GetRoleInGroup(group int, user string) (int, error) {
 	var res int
-	err := self.db.Select("roleID").Where(GroupMembers{groupID: group, userID: user}).Find(&res).Error
+	err := self.db.Select("roleID").Where(GroupMembers{groupID: group, userName: user}).Find(&res).Error
+	return res, err
+}
+
+func (self *Forum_db) MatchUserToPost(user string, post int) (Posts, error) {
+	var res Posts
+	err := self.db.Where(Posts{posterName: user, postID: post}).Find(&res).Error
 	return res, err
 }

@@ -16,11 +16,11 @@ func Router(forum_db database.Forum_db) {
 
 	// Getters
 
-	router.GET("/groups", func(ctx *gin.Context) {})                                              //GET groups
-	router.GET("/user/:id", func(ctx *gin.Context) {})                                            //GET UserByID
-	router.GET("/groups/user/:id", func(ctx *gin.Context) {})                                     //GET JoinedGroups
-	router.GET("/groups/:id/user", func(ctx *gin.Context) {})                                     //GET UsersInGroup
-	router.GET("/groups/:id/post", func(ctx *gin.Context) { handlers.FetchPosts(ctx, forum_db) }) //GET PostsInGroup
+	router.GET("/groups", func(ctx *gin.Context) { handlers.FetchGroups(ctx, forum_db) }) //GET groups
+	//router.GET("/user/:id", func(ctx *gin.Context) {})                                            //GET UserByID
+	router.GET("/groups/user/:id", func(ctx *gin.Context) { handlers.FetchUsersGroups(ctx, forum_db) }) //GET JoinedGroups
+	router.GET("/groups/:id/user", func(ctx *gin.Context) { handlers.FetchGroupUsers(ctx, forum_db) })  //GET UsersInGroup
+	router.GET("/groups/:id/post", func(ctx *gin.Context) { handlers.FetchPosts(ctx, forum_db) })       //GET PostsInGroup
 	//router.GET("/groups/:id/role", func(ctx *gin.Context) {}) //GET RoleInGroup
 
 	// Creators

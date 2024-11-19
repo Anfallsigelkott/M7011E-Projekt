@@ -81,7 +81,7 @@ func GenerateJWT(user database.Users, db database.Forum_db) (string, error) {
 	claims := token.Claims.(jwt.MapClaims)
 
 	claims["username"] = user.UserName
-	claims["userID"] = user.UserID
+	//claims["userID"] = user.UserID
 
 	tokenString, err := token.SignedString(mySigningKey)
 
@@ -124,13 +124,13 @@ func ValidateJWT(c *gin.Context) { // isValid, fullName, roleID
 	c.Next()
 }
 
-func ExtractJWT(tokenString string) (string, uint, error) {
+func ExtractJWT(tokenString string) (string, error) {
 	/*Extraction shouldn't require any further validation or error checking as
 	  we perform that in the ValidateJWT function, any errors should be handled there*/
-	token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return os.Getenv("secretkey"), nil
 	})
 
 	claims, _ := token.Claims.(jwt.MapClaims)
-	return claims["fullname"].(string), claims["roleID"].(uint), nil
+	return claims["username"].(string), err
 }
