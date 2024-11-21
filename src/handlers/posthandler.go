@@ -34,10 +34,14 @@ func CreatePost(c *gin.Context, db database.Forum_db) {
 		c.IndentedJSON(http.StatusInternalServerError, err.Error())
 		return
 	}
-	db.CreatePostEntry(user, int(group), body["content"], int(replyID))
+	err = db.CreatePostEntry(user, int(group), body["content"], int(replyID))
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, err.Error())
+	}
+	c.IndentedJSON(http.StatusOK, nil)
 }
 
-func UpdatePost(c *gin.Context, db database.Forum_db) {
+func UpdatePost(c *gin.Context, db database.Forum_db) { // Delete can be done through this call too
 	bodyAsByteArray, _ := io.ReadAll(c.Request.Body)
 	body := make(map[string]string)
 	json.Unmarshal(bodyAsByteArray, &body)
@@ -50,7 +54,7 @@ func UpdatePost(c *gin.Context, db database.Forum_db) {
 
 	tokenstring, err := c.Cookie("authtoken")
 	user, err := ExtractJWT(tokenstring)
-	_, err = db.GetRoleInGroup(int(group), user)
+	role, err := db.GetRoleInGroup(int(group), user)
 	if err != nil { // we expect error here if the user isn't in the group (no valid row)
 		c.IndentedJSON(http.StatusForbidden, err.Error())
 		return
@@ -62,13 +66,18 @@ func UpdatePost(c *gin.Context, db database.Forum_db) {
 		return
 	}
 
-	_, err = db.MatchUserToPost(user, int(postID))
-	if err != nil { // we expect error here if the user did not create the relevant post (no valid row)
-		c.IndentedJSON(http.StatusForbidden, err.Error())
-		return
+	if role != 3 || len(body["content"]) > 0 { // Check only necessary if user isn't an administrator, if admin bypass then new content must be empty for delete
+		_, err = db.MatchUserToPost(user, int(postID))
+		if err != nil { // we expect error here if the user did not create the relevant post (no valid row)
+			c.IndentedJSON(http.StatusForbidden, err.Error())
+			return
+		}
 	}
-
-	db.UpdatePostContent(int(postID), body["content"])
+	err = db.UpdatePostContent(int(postID), body["content"])
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, err.Error())
+	}
+	c.IndentedJSON(http.StatusOK, nil)
 }
 
 func FetchPosts(c *gin.Context, db database.Forum_db) {

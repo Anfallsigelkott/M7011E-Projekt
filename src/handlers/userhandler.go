@@ -49,12 +49,7 @@ func RegisterUser(c *gin.Context, db database.Forum_db) {
 	body := make(map[string]string)
 	json.Unmarshal(bodyAsByteArray, &body)
 
-	/*auth, _ := (body["authtoken"]) // Whether authtoken should be in params or body is TBD
-	_, id, _ := ExtractJWT(auth)
-	if id <= 1 { // Specific value here is TBD, depends on which roleID should be admin
-		return // Should return a specific status to signify only admins may create users
-	}*/
-	// TEMP OMITTED FOR TESTING REASONS
+	// This function should be callable by anyone, no middleware or auth needed
 
 	if !(len(body["password"]) > 0) || !(len(body["username"]) > 0) {
 		c.IndentedJSON(http.StatusBadRequest, "Invalid set of arguments was provided")
