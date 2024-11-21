@@ -18,6 +18,20 @@ func CreateNewGroup(c *gin.Context, db database.Forum_db) {
 	c.IndentedJSON(http.StatusOK, nil)
 }
 
+func DeleteGroup(c *gin.Context, db database.Forum_db) { // Needs admin-specific middleware
+	groupID, err := strconv.ParseInt(c.Param("group"), 10, 64)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	err = db.RemoveGroup(int(groupID))
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.IndentedJSON(http.StatusOK, nil)
+}
+
 func JoinGroup(c *gin.Context, db database.Forum_db) {
 	groupID, err := strconv.ParseInt(c.Param("group"), 10, 64)
 	if err != nil {
