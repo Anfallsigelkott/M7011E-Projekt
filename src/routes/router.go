@@ -25,21 +25,21 @@ func Router(forum_db database.Forum_db) {
 
 	// Creators
 
-	router.POST("/user/new", func(ctx *gin.Context) { handlers.RegisterUser(ctx, forum_db) }) //POST CreateNewUser
-	router.POST("/group/new", func(ctx *gin.Context) {})                                      //POST CreateNewGroup
-	router.POST("/post", func(ctx *gin.Context) { handlers.CreatePost(ctx, forum_db) })       //POST CreatePostEntry
-	router.POST("/user/join", func(ctx *gin.Context) {})                                      //POST AddUserToGroup
+	router.POST("/user/new", func(ctx *gin.Context) { handlers.RegisterUser(ctx, forum_db) })    //POST CreateNewUser
+	router.POST("/group/new", func(ctx *gin.Context) { handlers.CreateNewGroup(ctx, forum_db) }) //POST CreateNewGroup
+	router.POST("/post", func(ctx *gin.Context) { handlers.CreatePost(ctx, forum_db) })          //POST CreatePostEntry
+	router.POST("/user/join", func(ctx *gin.Context) { handlers.JoinGroup(ctx, forum_db) })      //POST AddUserToGroup
 
 	// Updaters
 
-	router.POST("/user/role", func(ctx *gin.Context) {}) //POST UpdateUserRole
-	router.POST("/post/edit", func(ctx *gin.Context) {}) //POST UpdatePostContent
-	router.POST("/user/edit", func(ctx *gin.Context) {}) //POST UpdateUsername (and mby other user option thingymayigs)
+	router.POST("/user/role", func(ctx *gin.Context) { handlers.UpdateUserRoleInGroup(ctx, forum_db) }) //POST UpdateUserRole
+	router.POST("/post/edit", func(ctx *gin.Context) { handlers.UpdatePost(ctx, forum_db) })            //POST UpdatePostContent
+	router.POST("/user/edit", func(ctx *gin.Context) { handlers.UpdateUsername(ctx, forum_db) })        //POST UpdateUsername (and mby other user option thingymayigs)
 
 	// Removers
 
-	router.POST("/user/leave", func(ctx *gin.Context) {})   //POST RemoveUserFromGroup
-	router.POST("/group/delete", func(ctx *gin.Context) {}) //POST RemoveGroup
+	router.POST("/user/leave", func(ctx *gin.Context) { handlers.RemoveFromGroup(ctx, forum_db) }) //POST RemoveUserFromGroup
+	router.POST("/group/delete", func(ctx *gin.Context) { handlers.DeleteGroup(ctx, forum_db) })   //POST RemoveGroup
 
 	router.POST("/user/login", func(ctx *gin.Context) { handlers.LoginUser(ctx, forum_db) }) //Bloody login init??
 

@@ -68,6 +68,23 @@ func RegisterUser(c *gin.Context, db database.Forum_db) {
 	c.IndentedJSON(http.StatusOK, nil)
 }
 
+func UpdateUsername(c *gin.Context, db database.Forum_db) {
+	bodyAsByteArray, _ := io.ReadAll(c.Request.Body)
+	body := make(map[string]string)
+	json.Unmarshal(bodyAsByteArray, &body)
+
+	if !(len(body["oldUsername"]) > 0) || !(len(body["newUsername"]) > 0) {
+		c.IndentedJSON(http.StatusBadRequest, "Invalid set of arguments was provided")
+		return
+	}
+
+	err := db.UpdateUsername(body["oldUsername"], body["newUsername"])
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, err)
+	}
+	c.IndentedJSON(http.StatusOK, nil)
+}
+
 // -------------- JWT UTILS -------------- //
 
 func GenerateJWT(user database.Users, db database.Forum_db) (string, error) {
