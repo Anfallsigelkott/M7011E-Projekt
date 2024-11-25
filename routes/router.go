@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"m7011e-projekt/src/database"
-	"m7011e-projekt/src/handlers"
+	"m7011e-projekt/database"
+	"m7011e-projekt/handlers"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

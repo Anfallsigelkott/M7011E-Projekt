@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"m7011e-projekt/src/database"
+	"m7011e-projekt/database"
 	"net/http"
 	"os"
 

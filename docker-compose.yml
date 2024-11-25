@@ -1,0 +1,41 @@
+volumes:
+  forum_database:
+
+services:
+  database:
+    image: mysql:9.1.0
+    container_name: forum_db
+    healthcheck:
+      test: "mysqladmin ping -h localhost"
+      interval: 1s
+      retries: 50
+      start_period: 5s
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - forum_database:/var/lib/mysql
+    
+
+  api:
+    build: .
+    image: forum_api:latest
+    container_name: forum_api
+    depends_on:
+      database:
+        condition: service_healthy
+      # api_test:
+      #   condition: service_completed_successfully
+    restart:
+      on-failure
+    environment:
+      DB_HOST: database
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD} # we might wanna remove this
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PORT: 3306
+    ports:
+        - "8080:8080"

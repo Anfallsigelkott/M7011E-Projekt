@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"io"
-	"m7011e-projekt/src/database"
+	"m7011e-projekt/database"
 	"net/http"
 	"strconv"
 

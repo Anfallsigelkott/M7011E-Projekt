@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"m7011e-projekt/src/database"
+	"m7011e-projekt/database"
 	"net/http"
 	"strconv"
 

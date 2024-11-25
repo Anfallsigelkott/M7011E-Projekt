@@ -2,8 +2,8 @@ package main
 
 import (
 	"log"
-	"m7011e-projekt/src/database"
-	"m7011e-projekt/src/routes"
+	"m7011e-projekt/database"
+	"m7011e-projekt/routes"
 	"os"
 )
 
