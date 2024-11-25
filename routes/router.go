@@ -25,10 +25,10 @@ func Router(forum_db database.Forum_db) {
 
 	// Creators
 
-	router.POST("/user/new", func(ctx *gin.Context) { handlers.RegisterUser(ctx, forum_db) })    //POST CreateNewUser
-	router.POST("/group/new", func(ctx *gin.Context) { handlers.CreateNewGroup(ctx, forum_db) }) //POST CreateNewGroup
-	router.POST("/post", func(ctx *gin.Context) { handlers.CreatePost(ctx, forum_db) })          //POST CreatePostEntry
-	router.POST("/user/join", func(ctx *gin.Context) { handlers.JoinGroup(ctx, forum_db) })      //POST AddUserToGroup
+	router.POST("/user/new", func(ctx *gin.Context) { handlers.RegisterUser(ctx, forum_db) })          //POST CreateNewUser
+	router.POST("/group/new/:name", func(ctx *gin.Context) { handlers.CreateNewGroup(ctx, forum_db) }) //POST CreateNewGroup
+	router.POST("/post", func(ctx *gin.Context) { handlers.CreatePost(ctx, forum_db) })                //POST CreatePostEntry
+	router.POST("/user/join", func(ctx *gin.Context) { handlers.JoinGroup(ctx, forum_db) })            //POST AddUserToGroup
 
 	// Updaters
 
@@ -43,7 +43,7 @@ func Router(forum_db database.Forum_db) {
 
 	router.POST("/user/login", func(ctx *gin.Context) { handlers.LoginUser(ctx, forum_db) }) //Bloody login init??
 
-	err := engin.Run("localhost:8080")
+	err := engin.Run("0.0.0.0:8080")
 	if err != nil {
 		return
 	}
