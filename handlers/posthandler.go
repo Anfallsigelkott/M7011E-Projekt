@@ -88,7 +88,7 @@ func UpdatePost(c *gin.Context, db database.Forum_db) { // Delete can be done th
 }
 
 func FetchPosts(c *gin.Context, db database.Forum_db) {
-	id, err := strconv.ParseInt(c.Param("group"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, err.Error())
 	}
