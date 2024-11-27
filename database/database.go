@@ -244,9 +244,9 @@ func (self *Forum_db) GetPostsInGroup(group int) ([]Posts, error) {
 }
 
 func (self *Forum_db) GetRoleInGroup(group int, user string) (int, error) {
-	var res int
+	var res GroupMembers
 	err := self.db.Select("role_id").Where(GroupMembers{GroupID: group, UserName: user}).Find(&res).Error
-	return res, err
+	return res.RoleID, err
 }
 
 func (self *Forum_db) MatchUserToPost(user string, post int) (Posts, error) {

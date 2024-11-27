@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"m7011e-projekt/database"
 	"net/http"
@@ -26,6 +27,7 @@ func CreatePost(c *gin.Context, db database.Forum_db) {
 
 	_, err = db.GetRoleInGroup(int(group), user)
 	if err != nil { // we expect error here if the user isn't in the group (no valid row)
+		fmt.Printf(err.Error())
 		c.IndentedJSON(http.StatusForbidden, err.Error())
 		return
 	}
