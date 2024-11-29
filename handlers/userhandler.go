@@ -62,11 +62,18 @@ func RegisterUser(c *gin.Context, db database.Forum_db) {
 		c.IndentedJSON(http.StatusInternalServerError, "Password hashing failed")
 		return
 	}
-	admin, err := strconv.ParseBool(body["isadmin"])
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, err)
+	var adminstatus bool
+	if len(body["isadmin"]) > 0 {
+		adminstatus, err = strconv.ParseBool(body["isadmin"])
+		if err != nil {
+			c.IndentedJSON(http.StatusInternalServerError, err)
+		}
+		// if adminstatus { check if user may create admins, if not set to false or error }
+	} else {
+		adminstatus = false
 	}
-	err = db.CreateNewUser(body["username"], string(hashedPW), admin)
+
+	err = db.CreateNewUser(body["username"], string(hashedPW), adminstatus)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, err)
 	}
