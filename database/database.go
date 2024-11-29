@@ -98,10 +98,11 @@ func (self *Forum_db) autoMigration() error {
 
 // ------------- Entry creators ------------- //
 
-func (self *Forum_db) CreateNewUser(uName string, pw string) error {
+func (self *Forum_db) CreateNewUser(uName string, pw string, admin bool) error {
 	tmp := Users{
 		UserName: uName,
 		Password: pw,
+		IsAdmin:  admin,
 	}
 	err := self.db.Create(&tmp).Error
 	return err
@@ -224,13 +225,13 @@ func (self *Forum_db) GetUsersInGroup(group int) ([]string, error) {
 	var pairs []GroupMembers
 	var userNames []string
 	// Find all member-group pairs for this group
-	err := self.db.Select("user_name").Where(GroupMembers{GroupID: group}).Find(&pairs).Error
+	err := self.db.Where(GroupMembers{GroupID: group}).Find(&pairs).Error
 	if err != nil {
 		fmt.Printf("errored while placing data in tmp")
 		return nil, err
 	}
 	for _, pair := range pairs {
-		userNames = append(userNames, pair.UserName)
+		userNames = append(userNames, pair.UserName, string(pair.RoleID))
 	}
 	// Find and return those users
 	//err = self.db.Find(&res, userNames).Error

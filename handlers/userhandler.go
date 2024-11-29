@@ -7,6 +7,7 @@ import (
 	"m7011e-projekt/database"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -61,7 +62,11 @@ func RegisterUser(c *gin.Context, db database.Forum_db) {
 		c.IndentedJSON(http.StatusInternalServerError, "Password hashing failed")
 		return
 	}
-	err = db.CreateNewUser(body["username"], string(hashedPW))
+	admin, err := strconv.ParseBool(body["isadmin"])
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, err)
+	}
+	err = db.CreateNewUser(body["username"], string(hashedPW), admin)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, err)
 	}
