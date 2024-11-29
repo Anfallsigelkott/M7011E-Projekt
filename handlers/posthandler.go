@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"m7011e-projekt/database"
 	"net/http"
@@ -26,6 +27,7 @@ func CreatePost(c *gin.Context, db database.Forum_db) {
 
 	_, err = db.GetRoleInGroup(int(group), user)
 	if err != nil { // we expect error here if the user isn't in the group (no valid row)
+		fmt.Printf(err.Error())
 		c.IndentedJSON(http.StatusForbidden, err.Error())
 		return
 	}
@@ -88,7 +90,7 @@ func UpdatePost(c *gin.Context, db database.Forum_db) { // Delete can be done th
 }
 
 func FetchPosts(c *gin.Context, db database.Forum_db) {
-	id, err := strconv.ParseInt(c.Param("group"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, err.Error())
 	}

@@ -98,10 +98,11 @@ func (self *Forum_db) autoMigration() error {
 
 // ------------- Entry creators ------------- //
 
-func (self *Forum_db) CreateNewUser(uName string, pw string) error {
+func (self *Forum_db) CreateNewUser(uName string, pw string, admin bool) error {
 	tmp := Users{
 		UserName: uName,
 		Password: pw,
+		IsAdmin:  admin,
 	}
 	err := self.db.Create(&tmp).Error
 	return err
@@ -139,7 +140,7 @@ func (self *Forum_db) CreatePostEntry(poster string, group int, postContent stri
 // ------------- Entry updaters ------------- //
 
 func (self *Forum_db) UpdateUserRole(user string, group int, newRole int) error {
-	err := self.db.Where(&GroupMembers{UserName: user, GroupID: group}).Update("roleID", newRole).Error
+	err := self.db.Where(&GroupMembers{UserName: user, GroupID: group}).Update("role_id", newRole).Error
 	return err
 }
 
@@ -149,7 +150,7 @@ func (self *Forum_db) UpdatePostContent(post int, newContent string) error {
 } // This also serves to remove posts since a post being 'removed' is equivalent to the content being removed (to maintain reply logic)
 
 func (self *Forum_db) UpdateUsername(oldUsername string, newUsername string) error {
-	err := self.db.Where(&Users{UserName: oldUsername}).Update("userName", newUsername).Error
+	err := self.db.Where(&Users{UserName: oldUsername}).Update("user_name", newUsername).Error
 	return err
 }
 
@@ -203,28 +204,38 @@ func (self *Forum_db) GetUserByUsername(user string) (Users, error) {
 
 func (self *Forum_db) GetJoinedGroups(user string) ([]Groups, error) {
 	var res []Groups
-	var tmp []int
+	var pairs []GroupMembers
+	var groupIDs []int
 	// Find all group-member pairs for this user
-	err := self.db.Select("groupID").Where(GroupMembers{UserName: user}).Find(&tmp).Error
+	err := self.db.Select("group_id").Where(GroupMembers{UserName: user}).Find(&pairs).Error
 	if err != nil {
+		fmt.Printf("errored while placing data in tmp")
 		return nil, err
 	}
+	for _, pair := range pairs {
+		groupIDs = append(groupIDs, pair.GroupID)
+	}
 	// Find and return those groups
-	err = self.db.Find(&res, tmp).Error
+	err = self.db.Find(&res, groupIDs).Error
 	return res, err
 }
 
-func (self *Forum_db) GetUsersInGroup(group int) ([]Users, error) {
-	var res []Users
-	var tmp []int
+func (self *Forum_db) GetUsersInGroup(group int) ([]string, error) {
+	//var res []Users
+	var pairs []GroupMembers
+	var userNames []string
 	// Find all member-group pairs for this group
-	err := self.db.Select("userID").Where(GroupMembers{GroupID: group}).Find(&tmp).Error
+	err := self.db.Where(GroupMembers{GroupID: group}).Find(&pairs).Error
 	if err != nil {
+		fmt.Printf("errored while placing data in tmp")
 		return nil, err
 	}
+	for _, pair := range pairs {
+		userNames = append(userNames, pair.UserName, string(pair.RoleID))
+	}
 	// Find and return those users
-	err = self.db.Find(&res, tmp).Error
-	return res, err
+	//err = self.db.Find(&res, userNames).Error
+	return userNames, err
 }
 
 func (self *Forum_db) GetPostsInGroup(group int) ([]Posts, error) {
@@ -234,9 +245,9 @@ func (self *Forum_db) GetPostsInGroup(group int) ([]Posts, error) {
 }
 
 func (self *Forum_db) GetRoleInGroup(group int, user string) (int, error) {
-	var res int
-	err := self.db.Select("roleID").Where(GroupMembers{GroupID: group, UserName: user}).Find(&res).Error
-	return res, err
+	var res GroupMembers
+	err := self.db.Select("role_id").Where(GroupMembers{GroupID: group, UserName: user}).Find(&res).Error
+	return res.RoleID, err
 }
 
 func (self *Forum_db) MatchUserToPost(user string, post int) (Posts, error) {
