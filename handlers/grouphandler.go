@@ -76,6 +76,7 @@ func RemoveFromGroup(c *gin.Context, db database.Forum_db) {
 
 	if actingrole != 2 && !actingUserEntry.IsAdmin && actinguser != username { // If user submitting leave request isn't admin or the leaving user, reject request
 		c.IndentedJSON(http.StatusForbidden, "Removal request submitted for non-self user by non-admin")
+		return
 	}
 	err = db.RemoveUserFromGroup(username, int(groupID))
 	if err != nil {
@@ -103,7 +104,25 @@ func UpdateUserRoleInGroup(c *gin.Context, db database.Forum_db) {
 		newRole = 1
 	} // ensuring our roles remain within specified bounds
 
-	user := c.Param("user")
+	tokenstring, err := c.Cookie("authtoken")
+	user, err := ExtractJWT(tokenstring)
+	role, err := db.GetRoleInGroup(int(groupID), user)
+	if err != nil { // we expect error here if the user isn't in the group (no valid row)
+		c.IndentedJSON(http.StatusForbidden, err.Error())
+		return
+	}
+	userEntry, err := db.GetUserByUsername(user)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if role != 2 && !userEntry.IsAdmin {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "must be group moderator or admin to update role"})
+		return
+	}
+
+	user = c.Param("user")
 	err = db.UpdateUserRole(user, int(groupID), int(newRole))
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, err.Error())

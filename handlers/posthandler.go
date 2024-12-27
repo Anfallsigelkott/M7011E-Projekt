@@ -75,7 +75,7 @@ func UpdatePost(c *gin.Context, db database.Forum_db) { // Delete can be done th
 		return
 	}
 
-	if role != 2 || !userEntry.IsAdmin || len(body["content"]) > 0 { // Check only necessary if user isn't an administrator/mod, if admin bypass then new content must be empty for delete
+	if (role != 2 && !userEntry.IsAdmin) || len(body["content"]) > 0 { // Check only necessary if user isn't an administrator/mod, if admin bypass then new content must be empty for delete
 		_, err = db.MatchUserToPost(user, int(postID))
 		if err != nil { // we expect error here if the user did not create the relevant post (no valid row)
 			c.IndentedJSON(http.StatusForbidden, err.Error())

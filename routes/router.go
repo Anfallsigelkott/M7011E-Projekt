@@ -38,8 +38,8 @@ func Router(forum_db database.Forum_db) {
 
 	// Removers
 
-	router.POST("/user/:user/leave/:group", func(ctx *gin.Context) { handlers.RemoveFromGroup(ctx, forum_db) }) //POST RemoveUserFromGroup
-	router.POST("/group/:group/delete", func(ctx *gin.Context) { handlers.DeleteGroup(ctx, forum_db) })         //POST RemoveGroup
+	router.POST("/user/:user/leave/:group", func(ctx *gin.Context) { handlers.RemoveFromGroup(ctx, forum_db) })                                                              //POST RemoveUserFromGroup
+	router.POST("/group/:group/delete", func(ctx *gin.Context) { handlers.AdminValidateJWT(ctx, forum_db) }, func(ctx *gin.Context) { handlers.DeleteGroup(ctx, forum_db) }) //POST RemoveGroup
 
 	router.POST("/user/login", func(ctx *gin.Context) { handlers.LoginUser(ctx, forum_db) }) //Bloody login init??
 

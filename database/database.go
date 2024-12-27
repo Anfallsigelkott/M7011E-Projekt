@@ -238,6 +238,12 @@ func (self *Forum_db) GetUsersInGroup(group int) ([]string, error) {
 	return userNames, err
 }
 
+func (self *Forum_db) UserTableIsEmpty() (bool, error) {
+	var count int64
+	err := self.db.Model(Users{}).Count(&count).Error
+	return (count < 1), err
+}
+
 func (self *Forum_db) GetPostsInGroup(group int) ([]Posts, error) {
 	var res []Posts
 	err := self.db.Find(&res, Posts{PostedGroupID: group}).Error

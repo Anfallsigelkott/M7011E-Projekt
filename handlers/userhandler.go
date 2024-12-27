@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"m7011e-projekt/database"
 	"net/http"
 	"os"
@@ -67,8 +68,21 @@ func RegisterUser(c *gin.Context, db database.Forum_db) {
 		adminstatus, err = strconv.ParseBool(body["isadmin"])
 		if err != nil {
 			c.IndentedJSON(http.StatusInternalServerError, err)
+			return
 		}
-		// if adminstatus { check if user may create admins, if not set to false or error }
+		if adminstatus {
+			tokenstring, err := c.Cookie("authtoken")
+			user, err := ExtractJWT(tokenstring)
+			requester, err := db.GetUserByUsername(user)
+			if err != nil {
+				c.IndentedJSON(http.StatusInternalServerError, err)
+				return
+			}
+			if !requester.IsAdmin {
+				c.IndentedJSON(http.StatusForbidden, gin.H{"error": "Only admins may attempt to create Admin accounts"})
+				return
+			}
+		}
 	} else {
 		adminstatus = false
 	}
@@ -90,11 +104,25 @@ func UpdateUsername(c *gin.Context, db database.Forum_db) {
 		return
 	}
 
-	err := db.UpdateUsername(body["oldUsername"], body["newUsername"])
+	tokenstring, err := c.Cookie("authtoken")
+	username, err := ExtractJWT(tokenstring)
+	userEntry, err := db.GetUserByUsername(username)
+	if username != body["oldUsername"] && !userEntry.IsAdmin {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Non-admins may not edit others usernames"})
+		return
+	}
+
+	err = db.UpdateUsername(body["oldUsername"], body["newUsername"])
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, err)
 	}
-	c.IndentedJSON(http.StatusOK, nil)
+	if username != body["oldUsername"] {
+		c.IndentedJSON(http.StatusOK, nil)
+		return
+	} else {
+		jwt, _ := GenerateJWT(userEntry, db)
+		c.IndentedJSON(http.StatusOK, jwt)
+	}
 }
 
 // -------------- JWT UTILS -------------- //
@@ -148,6 +176,44 @@ func ValidateJWT(c *gin.Context) { // isValid, fullName, roleID
 	c.Next()
 }
 
+func AdminValidateJWT(c *gin.Context, db database.Forum_db) { // isValid, fullName, roleID
+	//tokenString := c.Param("authtoken")
+	tokenString, err := c.Cookie("authtoken")
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, UnsignedResponse{
+			Message: "no jwt token could be found",
+		})
+	}
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, OK := token.Method.(*jwt.SigningMethodHMAC); !OK {
+			return nil, fmt.Errorf("bad signed method received")
+		}
+		return []byte("tempfix"), nil
+	}, jwt.WithValidMethods([]string{"HS256"}))
+
+	if err != nil || !token.Valid {
+		c.AbortWithStatusJSON(http.StatusBadRequest, UnsignedResponse{
+			Message: "bad jwt token",
+		})
+		return
+	}
+
+	_, OK := token.Claims.(jwt.MapClaims)
+	if !OK {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, UnsignedResponse{
+			Message: "unable to parse claims",
+		})
+		return
+	}
+	username, _ := ExtractJWT(tokenString)
+	user, _ := db.GetUserByUsername(username)
+	if !user.IsAdmin {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "unauthorized user"})
+		return
+	}
+	c.Next()
+}
+
 func ExtractJWT(tokenString string) (string, error) {
 	/*Extraction shouldn't require any further validation or error checking as
 	  we perform that in the ValidateJWT function, any errors should be handled there*/
@@ -157,4 +223,28 @@ func ExtractJWT(tokenString string) (string, error) {
 
 	claims, _ := token.Claims.(jwt.MapClaims)
 	return claims["username"].(string), err
+}
+
+func AddOriginAdmin(db database.Forum_db) {
+	isEmpty, err := db.UserTableIsEmpty()
+	if err != nil {
+		log.Printf("Internal error when verifying table status. Error: %s\n", err.Error())
+		return
+	}
+
+	if isEmpty {
+		hashedPW, err := bcrypt.GenerateFromPassword([]byte("newpass"), 14)
+		if err != nil {
+			log.Printf("error generating hashed password: %s\n", err.Error())
+			return
+		}
+		err = db.CreateNewUser("Admin", string(hashedPW), true)
+		if err != nil {
+			log.Printf("error creating user: %s\n", err.Error())
+			return
+		}
+		log.Println("Origin admin account was created, please use it to create a new account and immediately delete this one")
+		return
+	}
+	log.Println("Table not empty, no account was created")
 }
