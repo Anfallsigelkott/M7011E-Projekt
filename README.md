@@ -36,7 +36,7 @@ Prepend each route with /v1 (so use localhost:8080/v1/groups to get the groups f
     - Body: `{"content": "<text of post>", "replyID": "<postID this post is in reply to, can be left blank>"}`
     - Adds a new post to the group with the ID :group that contains the content provided in the request body. Can be a reply to another post. Which user posted it is taken from the users authorisation token.
 - /user/:user/join/:group/
-    - A user with the ID :user is made a part of the group with the ID :group.
+    - A user with the username :user is made a part of the group with the ID :group.
 
 ### Updaters
 

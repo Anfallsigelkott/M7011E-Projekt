@@ -6,6 +6,8 @@ import (
 	"os"
 	"sync"
 
+	"strconv"
+
 	mysqlErr "github.com/go-sql-driver/mysql" // only for error checking
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -140,17 +142,17 @@ func (self *Forum_db) CreatePostEntry(poster string, group int, postContent stri
 // ------------- Entry updaters ------------- //
 
 func (self *Forum_db) UpdateUserRole(user string, group int, newRole int) error {
-	err := self.db.Where(&GroupMembers{UserName: user, GroupID: group}).Update("role_id", newRole).Error
+	err := self.db.Where(&GroupMembers{UserName: user, GroupID: group}).Updates(&GroupMembers{RoleID: newRole}).Error
 	return err
 }
 
 func (self *Forum_db) UpdatePostContent(post int, newContent string) error {
-	err := self.db.Where(&Posts{PostID: post}).Update("content", newContent).Error
+	err := self.db.Where(&Posts{PostID: post}).Updates(&Posts{Content: newContent}).Error
 	return err
 } // This also serves to remove posts since a post being 'removed' is equivalent to the content being removed (to maintain reply logic)
 
 func (self *Forum_db) UpdateUsername(oldUsername string, newUsername string) error {
-	err := self.db.Where(&Users{UserName: oldUsername}).Update("user_name", newUsername).Error
+	err := self.db.Where(&Users{UserName: oldUsername}).Updates(&Users{UserName: newUsername}).Error
 	return err
 }
 
@@ -231,7 +233,7 @@ func (self *Forum_db) GetUsersInGroup(group int) ([]string, error) {
 		return nil, err
 	}
 	for _, pair := range pairs {
-		userNames = append(userNames, pair.UserName, string(pair.RoleID))
+		userNames = append(userNames, pair.UserName, strconv.Itoa(pair.RoleID))
 	}
 	// Find and return those users
 	//err = self.db.Find(&res, userNames).Error

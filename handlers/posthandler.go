@@ -32,10 +32,13 @@ func CreatePost(c *gin.Context, db database.Forum_db) {
 		return
 	}
 
-	replyID, err := strconv.ParseInt(body["replyID"], 10, 64)
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, err.Error())
-		return
+	replyID := int64(0)
+	if len(body["replyID"]) > 0 {
+		replyID, err = strconv.ParseInt(body["replyID"], 10, 64)
+		if err != nil {
+			c.IndentedJSON(http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 	err = db.CreatePostEntry(user, int(group), body["content"], int(replyID))
 	if err != nil {
@@ -82,9 +85,12 @@ func UpdatePost(c *gin.Context, db database.Forum_db) { // Delete can be done th
 			return
 		}
 	}
-	err = db.UpdatePostContent(int(postID), body["content"])
+	fmt.Printf("content: %v", body["content"])
+	content := body["content"]
+	err = db.UpdatePostContent(int(postID), content)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, err.Error())
+		return
 	}
 	c.IndentedJSON(http.StatusOK, nil)
 }
