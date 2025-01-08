@@ -165,17 +165,17 @@ func (self *Forum_db) RemoveUserFromGroup(user string, group int) error {
 
 func (self *Forum_db) RemoveGroup(group int) error {
 	tx := self.db.Begin()
-	err := tx.Delete(&Groups{GroupID: group}).Error
+	err := tx.Delete(&Groups{}, group).Error
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
-	err = tx.Delete(&GroupMembers{GroupID: group}).Error
+	err = tx.Where(&GroupMembers{GroupID: group}).Delete(&GroupMembers{}).Error
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
-	err = tx.Delete(&Posts{PostedGroupID: group}).Error
+	err = tx.Where(&Posts{PostedGroupID: group}).Delete(&Posts{}).Error
 	if err != nil {
 		tx.Rollback()
 		return err

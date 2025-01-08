@@ -56,7 +56,7 @@ Prepend each route with /v1 (so use localhost:8080/v1/groups to get the groups f
 ### Removers
 
 - /user/:user/leave/:group
-    - Removes a user with the ID :user from the group with the ID :group. Only the user in question, a moderator of the group in question or an admin is allowed to do this.    
+    - Removes a user with the name :user from the group with the ID :group. Only the user in question, a moderator of the group in question or an admin is allowed to do this.    
 - /group/:group/delete
     - Deletes the group with the ID :group. Only accessible to admins.
 
