@@ -87,6 +87,9 @@ func UpdatePost(c *gin.Context, db database.Forum_db) { // Delete can be done th
 	}
 	fmt.Printf("content: %v", body["content"])
 	content := body["content"]
+	if len(body["content"]) == 0 {
+		content = "Post has been removed"
+	}
 	err = db.UpdatePostContent(int(postID), content)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, err.Error())
